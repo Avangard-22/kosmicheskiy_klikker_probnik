@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>Космический Кликер</title>
+    
+    <!-- Шрифты и иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+    <!-- Фон планеты -->
+    <canvas id="planetBackgroundCanvas"></canvas>
+    
+    <!-- Заголовок (Планета) -->
+    <div id="header">
+        <h1 id="gameTitle">☿ Меркурий</h1>
+    </div>
+
+    <!-- Прогресс-бар (Теперь вверху) -->
+    <div id="progressContainer">
+        <div id="progressBar"></div>
+    </div>
+    <div id="progressText">Прогресс: 0.00000 / 0.38710 а.е. (0%)</div>
+
+    <!-- HUD (Информация о кристаллах и статах) -->
+    <!-- Расположен под прогресс-баром, чтобы не перекрывать его -->
+    <div id="hud-left">
+        <div class="hud-item">
+            <i class="fas fa-coins" style="color: #FFD54F;"></i>
+            <span>Кристаллы: </span>
+            <span id="coins-value">0</span>
+        </div>
+        <div class="hud-item">
+            <i class="fas fa-fist-raised" style="color: #4FC3F7;"></i>
+            <span>Сила: </span>
+            <span id="clickPower-value">1</span>
+        </div>
+        <div class="hud-item">
+            <i class="fas fa-star" style="color: #FFD700;"></i>
+            <span>Крит: </span>
+            <span id="critChance-value">0.1%</span>
+        </div>
+        <div class="hud-item">
+            <i class="fas fa-bolt" style="color: #FFD700;"></i>
+            <span>Множ.крита: </span>
+            <span id="critMultiplier-value">x2.0</span>
+        </div>
+    </div>
+
+    <!-- Контейнер для активных бустов из магазина -->
+    <div id="activeBoosts"></div>
+
+    <!-- Игровая область (Блоки) -->
+    <div id="gameArea">
+    </div>
+
+    <!-- Уведомления (Штрафы, Редкие блоки) -->
+    <div id="levelAnnounce"></div>
+    <div id="penaltyAnnounce"></div>
+
+    <!-- Кнопки улучшений (Справа) -->
+    <div id="upgrades-container">
+        <div class="upgrade-btn btn-available" id="upgradeClickBtn" title="Увеличить силу удара">
+            <i class="fas fa-fist-raised"></i>
+            <div class="upgrade-cost">80</div>
+        </div>
+        
+        <div class="upgrade-btn btn-available" id="upgradeHelperBtn" title="Активировать Bobo">
+            <i class="fas fa-robot"></i>
+            <div class="upgrade-cost">1500</div>
+        </div>
+        
+        <div class="upgrade-btn btn-available" id="upgradeCritChanceBtn" title="Увеличить шанс крита">
+            <i class="fas fa-star"></i>
+            <div class="upgrade-cost">500</div>
+        </div>
+        
+        <div class="upgrade-btn btn-available" id="upgradeCritMultBtn" title="Увеличить множитель крита">
+            <i class="fas fa-bolt"></i>
+            <div class="upgrade-cost">800</div>
+        </div>
+        
+        <div class="upgrade-btn btn-available" id="upgradeHelperDmgBtn" title="Увеличить урон Bobo">
+            <i class="fas fa-chart-line"></i>
+            <div class="upgrade-cost">1000</div>
+        </div>
+    </div>
+
+    <!-- Кнопка Магазина -->
+    <div class="shop-container">
+        <button id="shopBtn" class="shop-btn" title="Магазин бонусов">🛒</button>
+        <div id="shopPanel" class="shop-panel">
+            <!-- Элементы магазина генерируются через JS -->
+        </div>
+    </div>
+
+    <!-- Кнопка Ежедневного Бонуса -->
+    <!-- Появляется в HUD или на экране, если доступен -->
+    <div id="dailyBonusContainer" style="display:none;"></div>
+
+    <!-- Кнопка Достижений -->
+    <div class="achievements-container">
+        <button id="achievementsBtn" class="achievements-btn" title="Достижения">
+            <i class="fas fa-trophy"></i>
+            <span id="achievementsCount" style="font-size: 0.55em; margin-left: 3px; position: absolute; bottom: 2px; right: 8px; font-weight: bold;">0/0</span>
+        </button>
+    </div>
+
+    <!-- Кнопка Сохранения -->
+    <button id="saveBtn" title="Сохранить игру">
+        <i class="fas fa-save"></i>
+    </button>
+
+    <!-- Тултип -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- Экран приветствия -->
+    <div id="welcomeScreen">
+        <button id="langBtn-welcome" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 1.2em;">🇷🇺</button>
+        <h2>🚀 КОСМИЧЕСКИЙ КЛИКЕР</h2>
+        <p>Разрушайте восходящие блоки и собирайте космические Кристаллы!</p>
+        <p>Каждый блок требует определённого количества ударов для разрушения.</p>
+        <p>Реалистичная система прогресса:</p>
+        <p>🌌 Астрономические единицы — перемещайтесь по Солнечной системе</p>
+        <p>🪐 9 реальных планет — от Меркурия до Плутона</p>
+        <p>🚀 Улучшения — увеличивайте силу, криты и активируйте помощника</p>
+        <p>✨ Редкие блоки — дают бонусы и огромные награды!</p>
+        <p>⚠️ Если блок уйдёт за экран — вы потеряете часть улучшения!</p>
+        <button id="continueBtn" class="btn">Продолжить</button>
+        <button id="startBtn" class="btn">Новая игра</button>
+    </div>
+
+    <!-- Экран Game Over -->
+    <div id="gameOverScreen" style="display: none;">
+        <h2>ДОБЫЧА ПРЕРВАНА!</h2>
+        <p id="finalScore">Всего урона: 0</p>
+        <button id="restartBtn">Новая добыча</button>
+        <button id="shareBtn">Поделиться</button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ЗАГРУЗКА СКРИПТОВ (СТРОГО В ТАКОМ ПОРЯДКЕ) -->
+    <!-- ========================================== -->
+
+    <!-- 1. Базовые системы (Данные, Язык, Telegram) -->
+    <!-- Переводы нужны сразу для инициализации -->
+    <script src="js/translations.js"></script>
+    <!-- Интеграция Telegram (Вибрация и т.д.) -->
+    <script src="js/telegram-integration.js"></script>
+
+    <!-- 2. Сохранения -->
+    <!-- Создаёт window.gameState до запуска логики -->
+    <script src="js/save-system.js"></script>
+
+    <!-- 3. Магазин -->
+    <!-- Должен быть загружен ДО game-logic, так как логика запрашивает множители урона/скорости у магазина -->
+    <script src="js/shop.js"></script>
+
+    <!-- 4. Основная Игровая Логика -->
+    <!-- Ядро игры, управление блоками, ударами и циклом -->
+    <script src="js/game-logic.js"></script>
+
+    <!-- 5. Визуализация и Мета-игры -->
+    <!-- Эти модули работают параллельно или требуют доступа к gameFunctions -->
+    <script src="js/planet-background.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/daily-bonus.js"></script>
+
+</body>
+</html>
