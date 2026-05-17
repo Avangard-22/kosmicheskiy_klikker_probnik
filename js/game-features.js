@@ -3,7 +3,6 @@
 'use strict';
 const CFG = window.GAME_CONFIG;
 const UI = window.GAME_UI;
-const CORE = window.GAME_CORE;
 
 window.GAME_FEATURES = {
 
@@ -36,8 +35,11 @@ createExplosion: function(block) {
 },
 
 applyUpgradePenalty: function() {
-    if (!window.gameState || CORE.getBonus('isInvincible', false)) {
-        console.log("🛡️ Неуязвимость активна. Штраф отменён!"); 
+    if (!window.gameState) return;
+    
+    // ✅ Проверка на GAME_CORE
+    if (window.GAME_CORE && window.GAME_CORE.getBonus && window.GAME_CORE.getBonus('isInvincible', false)) {
+        console.log("🛡️ Неуязвимость активна. Штраф отменён!");
         return;
     }
     
@@ -54,7 +56,11 @@ applyUpgradePenalty: function() {
     if(cur <=0) return;
     
     u.s(Math.max(0, Math.floor(cur*(1-pct))));
-    window.gameState.clickPower = CORE.calculateClickPower(); 
+    
+    // ✅ Безопасный вызов calculateClickPower
+    if (window.GAME_CORE && window.GAME_CORE.calculateClickPower) {
+        window.gameState.clickPower = window.GAME_CORE.calculateClickPower();
+    }
     
     const pan = document.getElementById('penaltyAnnounce');
     if(pan){ 
@@ -65,7 +71,14 @@ applyUpgradePenalty: function() {
         setTimeout(()=>{pan.style.opacity='0';setTimeout(()=>pan.style.display='none',500);},2500); 
     }
     
-    CORE.playSound('penaltySound');
+    // ✅ Безопасный вызов playSound
+    if (window.GAME_CORE && window.GAME_CORE.playSound) {
+        window.GAME_CORE.playSound('penaltySound');
+    } else {
+        const s = document.getElementById('penaltySound');
+        if (s) { s.currentTime = 0; s.play().catch(()=>{}); }
+    }
+    
     if(window.telegramHaptic) window.telegramHaptic.error(); 
     else if(navigator.vibrate) navigator.vibrate([200,100,200]);
     
@@ -77,25 +90,31 @@ applyUpgradePenalty: function() {
 activateHelper: function() {
     if (!window.gameState) return;
     
-    if (window.gameState.helperActive && CORE.helperInterval) clearInterval(CORE.helperInterval);
-    if (window.gameState.helperActive && CORE.helperTimer) clearInterval(CORE.helperTimer);
+    // ✅ Проверка на GAME_CORE
+    if (!window.GAME_CORE) {
+        console.error('❌ GAME_CORE не инициализирован!');
+        return;
+    }
+    
+    if (window.gameState.helperActive && window.GAME_CORE.helperInterval) clearInterval(window.GAME_CORE.helperInterval);
+    if (window.gameState.helperActive && window.GAME_CORE.helperTimer) clearInterval(window.GAME_CORE.helperTimer);
     
     window.gameState.helperActive = true;
     window.gameState.helperTimeLeft = 60000;
     window.gameState.boboCoinBonus = 0.2;
     
-    CORE.createHelperElement();
+    window.GAME_CORE.createHelperElement();
     
-    CORE.helperInterval = setInterval(() => { 
-        if (window.gameState?.helperActive && CORE.currentBlock && window.gameState.gameActive && !CORE.isGamePaused) {
-            CORE.helperAttack(); 
+    window.GAME_CORE.helperInterval = setInterval(() => { 
+        if (window.gameState?.helperActive && window.GAME_CORE.currentBlock && window.gameState.gameActive && !window.GAME_CORE.isGamePaused) {
+            window.GAME_CORE.helperAttack(); 
         }
     }, 1500);
     
-    CORE.helperTimer = setInterval(() => {
+    window.GAME_CORE.helperTimer = setInterval(() => {
         if (!window.gameState || !window.gameState.helperActive) { 
-            if(CORE.helperTimer) clearInterval(CORE.helperTimer); 
-            CORE.helperTimer=null; 
+            if(window.GAME_CORE.helperTimer) clearInterval(window.GAME_CORE.helperTimer); 
+            window.GAME_CORE.helperTimer=null; 
             return; 
         }
         
@@ -104,22 +123,22 @@ activateHelper: function() {
         if (window.gameState.helperTimeLeft <= 0) {
             window.gameState.helperActive = false;
             
-            if(CORE.helperInterval) { 
-                clearInterval(CORE.helperInterval); 
-                CORE.helperInterval=null; 
+            if(window.GAME_CORE.helperInterval) { 
+                clearInterval(window.GAME_CORE.helperInterval); 
+                window.GAME_CORE.helperInterval=null; 
             }
-            if(CORE.helperTimer) { 
-                clearInterval(CORE.helperTimer); 
-                CORE.helperTimer=null; 
+            if(window.GAME_CORE.helperTimer) { 
+                clearInterval(window.GAME_CORE.helperTimer); 
+                window.GAME_CORE.helperTimer=null; 
             }
             
             window.gameState.boboCoinBonus = 0;
             
-            if(CORE.helperElement) { 
-                CORE.helperElement.style.opacity='0'; 
+            if(window.GAME_CORE.helperElement) { 
+                window.GAME_CORE.helperElement.style.opacity='0'; 
                 setTimeout(()=>{
-                    if(CORE.helperElement?.parentNode) document.body.removeChild(CORE.helperElement); 
-                    CORE.helperElement=null;
+                    if(window.GAME_CORE.helperElement?.parentNode) document.body.removeChild(window.GAME_CORE.helperElement); 
+                    window.GAME_CORE.helperElement=null;
                 },300); 
             }
             
@@ -144,21 +163,58 @@ activateHelper: function() {
 },
 
 buyClickPower: function() {
-    if (!window.gameState) return;
+    if (!window.gameState) {
+        console.error('❌ gameState не инициализирован!');
+        return;
+    }
+    
+    // ✅ Проверка и инициализация
+    if (window.gameState.clickUpgradeLevel === undefined) {
+        window.gameState.clickUpgradeLevel = 0;
+        console.log('⚠️ clickUpgradeLevel не был инициализирован, установлен 0');
+    }
     
     const cost = Math.floor(CFG.costs.baseClickUpgradeCost * Math.pow(1.5, window.gameState.clickUpgradeLevel));
+    
+    console.log('💰 Покупка силы удара:', {
+        cost: cost,
+        coins: window.gameState.coins,
+        level: window.gameState.clickUpgradeLevel,
+        canAfford: window.gameState.coins >= cost
+    });
     
     if (window.gameState.coins >= cost) {
         window.gameState.coins -= cost;
         window.gameState.clickUpgradeLevel++; 
-        window.gameState.clickPower = CORE.calculateClickPower();
-        window.gameMetrics.upgradesBought = (window.gameMetrics.upgradesBought || 0) + 1;
         
+        // ✅ Безопасный вызов calculateClickPower
+        if (window.GAME_CORE && window.GAME_CORE.calculateClickPower) {
+            const oldPower = window.gameState.clickPower;
+            window.gameState.clickPower = window.GAME_CORE.calculateClickPower();
+            
+            console.log('✅ Сила удара увеличена:', {
+                oldLevel: window.gameState.clickUpgradeLevel - 1,
+                newLevel: window.gameState.clickUpgradeLevel,
+                oldPower: oldPower,
+                newPower: window.gameState.clickPower
+            });
+        } else {
+            console.warn('⚠️ GAME_CORE.calculateClickPower недоступен');
+        }
+        
+        window.gameMetrics.upgradesBought = (window.gameMetrics.upgradesBought || 0) + 1;
         if (window.achievementsSystem) window.achievementsSystem.incrementUpgrades(1); 
         
         UI.updateHUD(); 
         UI.updateUpgradeButtons(); 
-        CORE.playSound('upgradeSound');
+        
+        // ✅ Безопасный вызов playSound
+        if (window.GAME_CORE && window.GAME_CORE.playSound) {
+            window.GAME_CORE.playSound('upgradeSound');
+        } else {
+            const s = document.getElementById('upgradeSound');
+            if (s) { s.currentTime = 0; s.play().catch(()=>{}); }
+        }
         
         const btn = document.getElementById('upgradeClickBtn'); 
         if (btn) { 
@@ -172,17 +228,27 @@ buyClickPower: function() {
         
         if(window.showTooltip) { 
             window.showTooltip(window.formatString(window.translations[window.currentLanguage].tooltips.clickPowerUpgrade,{
-                power:Math.round(window.gameState.clickPower)
+                power: Math.round(window.gameState.clickPower)
             })); 
             setTimeout(window.hideTooltip,1500); 
         }
         
         window.saveGame();
+    } else {
+        console.warn('⚠️ Недостаточно кристаллов для покупки силы удара');
+        const btn = document.getElementById('upgradeClickBtn');
+        if (btn) {
+            btn.style.animation = 'shake 0.5s';
+            setTimeout(() => btn.style.animation = '', 500);
+        }
     }
 },
 
 buyHelper: function() {
-    if (!window.gameState) return;
+    if (!window.gameState) {
+        console.error('❌ gameState не инициализирован!');
+        return;
+    }
     
     const baseCost = Math.floor(CFG.costs.baseHelperUpgradeCost * Math.pow(1.4, window.gameState.helperUpgradeLevel));
     const actBonus = Math.floor((window.gameState.helperActivations || 0) / 10);
@@ -227,7 +293,10 @@ buyCritChance: function() {
         
         UI.updateHUD(); 
         UI.updateUpgradeButtons(); 
-        CORE.playSound('upgradeSound');
+        
+        if (window.GAME_CORE && window.GAME_CORE.playSound) {
+            window.GAME_CORE.playSound('upgradeSound');
+        }
         
         const btn = document.getElementById('upgradeCritChanceBtn');
         if (btn) {  
@@ -265,7 +334,10 @@ buyCritMultiplier: function() {
         
         UI.updateHUD(); 
         UI.updateUpgradeButtons(); 
-        CORE.playSound('upgradeSound');
+        
+        if (window.GAME_CORE && window.GAME_CORE.playSound) {
+            window.GAME_CORE.playSound('upgradeSound');
+        }
         
         const btn = document.getElementById('upgradeCritMultBtn');
         if (btn) { 
@@ -302,7 +374,10 @@ buyHelperDamage: function() {
         
         UI.updateHUD(); 
         UI.updateUpgradeButtons(); 
-        CORE.playSound('upgradeSound');
+        
+        if (window.GAME_CORE && window.GAME_CORE.playSound) {
+            window.GAME_CORE.playSound('upgradeSound');
+        }
         
         const btn = document.getElementById('upgradeHelperDmgBtn');
         if (btn) { 
