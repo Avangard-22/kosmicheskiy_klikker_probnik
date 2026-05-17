@@ -1,7 +1,7 @@
 // game-config.js
 window.GAME_CONFIG = {
     astronomicalUnits: {
-        mercury: 0.38710, venus: 0.72333, earth: 1.00000, mars: 1.52366, 
+        mercury: 0.38710, venus: 0.72333, earth: 1.00000, mars: 1.52366,
         jupiter: 5.20336, saturn: 9.53707, uranus: 19.19126, neptune: 30.06896, pluto: 39.48200
     },
     AU_TO_DAMAGE: 149597870.691,
