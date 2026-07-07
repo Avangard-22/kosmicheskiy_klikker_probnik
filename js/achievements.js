@@ -1,535 +1,912 @@
-// achievements.js
+// js/achievements.js (v2.1) — Исправлена двусторонняя синхронизация метрик и прогресса
 (function() {
 'use strict';
-const achievements = {
-blockBreaker: {
-levels: [
-{ id: 'novice', target: 10, reward: 100, name: 'Новичок' },
-{ id: 'apprentice', target: 50, reward: 250, name: 'Ученик' },
-{ id: 'journeyman', target: 200, reward: 500, name: 'Подмастерье' },
-{ id: 'expert', target: 1000, reward: 1000, name: 'Эксперт' },
-{ id: 'master', target: 5000, reward: 2500, name: 'Мастер' },
-{ id: 'grandmaster', target: 20000, reward: 5000, name: 'Гроссмейстер' },
-{ id: 'legend', target: 100000, reward: 10000, name: 'Легенда' },
-{ id: 'mythical', target: 500000, reward: 25000, name: 'Мифический' },
-{ id: 'divine', target: 1000000, reward: 50000, name: 'Божественный' },
-{ id: 'cosmic', target: 5000000, reward: 100000, name: 'Космический' }
-],
-icon: 'fas fa-hammer',
-description: 'Разрушить блоков'
-},
-crystalCollector: {
-levels: [
-{ id: 'rich', target: 1000, reward: 500, name: 'Богач' },
-{ id: 'wealthy', target: 10000, reward: 2500, name: 'Состоятельный' },
-{ id: 'millionaire', target: 100000, reward: 10000, name: 'Миллионер' },
-{ id: 'tycoon', target: 1000000, reward: 25000, name: 'Магнат' },
-{ id: 'crystalKing', target: 10000000, reward: 100000, name: 'Король кристаллов' },
-{ id: 'crystalEmperor', target: 50000000, reward: 250000, name: 'Император' },
-{ id: 'crystalGod', target: 100000000, reward: 500000, name: 'Бог кристаллов' },
-{ id: 'crystalUniverse', target: 500000000, reward: 1000000, name: 'Вселенная' },
-{ id: 'crystalInfinity', target: 1000000000, reward: 2500000, name: 'Бесконечность' },
-{ id: 'crystalOmnipotent', target: 5000000000, reward: 5000000, name: 'Всемогущий' }
-],
-icon: 'fas fa-gem',
-description: 'Собрать кристаллов'
-},
-critSpecialist: {
-levels: [
-{ id: 'critMaster', target: 50, reward: 300, name: 'Мастер крита' },
-{ id: 'critExpert', target: 500, reward: 1500, name: 'Эксперт крита' },
-{ id: 'critChampion', target: 2500, reward: 5000, name: 'Чемпион крита' },
-{ id: 'critGod', target: 10000, reward: 20000, name: 'Бог крита' },
-{ id: 'critLegend', target: 50000, reward: 50000, name: 'Легенда крита' },
-{ id: 'critMythical', target: 200000, reward: 100000, name: 'Мифический' },
-{ id: 'critDivine', target: 1000000, reward: 250000, name: 'Божественный' },
-{ id: 'critCosmic', target: 5000000, reward: 500000, name: 'Космический' }
-],
-icon: 'fas fa-star',
-description: 'Нанести критических ударов'
-},
-upgrader: {
-levels: [
-{ id: 'upgradeStarter', target: 5, reward: 200, name: 'Начинающий' },
-{ id: 'upgradeEnthusiast', target: 15, reward: 500, name: 'Энтузиаст' },
-{ id: 'upgradeMaster', target: 30, reward: 1000, name: 'Мастер' },
-{ id: 'upgradePerfectionist', target: 50, reward: 2500, name: 'Перфекционист' },
-{ id: 'upgradeGenius', target: 100, reward: 5000, name: 'Гений' },
-{ id: 'upgradeVisionary', target: 200, reward: 10000, name: 'Визионер' },
-{ id: 'upgradeArchitect', target: 500, reward: 25000, name: 'Архитектор' },
-{ id: 'upgradeTranscendent', target: 1000, reward: 50000, name: 'Трансцендент' }
-],
-icon: 'fas fa-chart-line',
-description: 'Купить улучшений'
-},
-helperExpert: {
-levels: [
-{ id: 'helperNovice', target: 1, reward: 300, name: 'Новичок' },
-{ id: 'helperSpecialist', target: 5, reward: 1000, name: 'Специалист' },
-{ id: 'helperMaster', target: 10, reward: 2500, name: 'Мастер' },
-{ id: 'helperCommander', target: 25, reward: 5000, name: 'Командир' },
-{ id: 'helperLegend', target: 50, reward: 10000, name: 'Легенда' },
-{ id: 'helperCosmic', target: 100, reward: 25000, name: 'Космический' }
-],
-icon: 'fas fa-robot',
-description: 'Нанять помощников'
-},
-boosterUser: {
-levels: [
-{ id: 'boosterBeginner', target: 3, reward: 200, name: 'Новичок' },
-{ id: 'boosterRegular', target: 10, reward: 600, name: 'Регулярный' },
-{ id: 'boosterAddict', target: 25, reward: 1500, name: 'Зависимый' },
-{ id: 'boosterMaster', target: 50, reward: 3000, name: 'Мастер' },
-{ id: 'boosterLegend', target: 100, reward: 7500, name: 'Легенда' },
-{ id: 'boosterCosmic', target: 250, reward: 15000, name: 'Космический' }
-],
-icon: 'fas fa-bolt',
-description: 'Использовать бустов'
-},
-planetExplorer: {
-levels: [
-{ id: 'mercuryExplorer', target: 1, reward: 100, name: 'Меркурий' },
-{ id: 'venusExplorer', target: 2, reward: 200, name: 'Венера' },
-{ id: 'earthExplorer', target: 3, reward: 300, name: 'Земля' },
-{ id: 'marsExplorer', target: 4, reward: 400, name: 'Марс' },
-{ id: 'jupiterExplorer', target: 5, reward: 500, name: 'Юпитер' },
-{ id: 'saturnExplorer', target: 6, reward: 600, name: 'Сатурн' },
-{ id: 'uranusExplorer', target: 7, reward: 700, name: 'Уран' },
-{ id: 'neptuneExplorer', target: 8, reward: 800, name: 'Нептун' },
-{ id: 'plutoExplorer', target: 9, reward: 900, name: 'Плутон' },
-{ id: 'solarSystemMaster', target: 9, reward: 5000, name: 'Мастер СС' },
-{ id: 'galaxyExplorer', target: 9, reward: 10000, name: 'Исследователь галактики' },
-{ id: 'universeConqueror', target: 9, reward: 25000, name: 'Покоритель вселенной' }
-],
-icon: 'fas fa-globe-americas',
-description: 'Исследовать планет'
-},
-comboMaster: {
-levels: [
-{ id: 'comboApprentice', target: 10, reward: 200, name: 'Ученик' },
-{ id: 'comboExpert', target: 25, reward: 500, name: 'Эксперт' },
-{ id: 'comboMaster', target: 50, reward: 1000, name: 'Мастер' },
-{ id: 'comboGod', target: 100, reward: 2500, name: 'Бог комбо' },
-{ id: 'comboLegend', target: 200, reward: 5000, name: 'Легенда' },
-{ id: 'comboMythical', target: 500, reward: 10000, name: 'Мифический' },
-{ id: 'comboDivine', target: 1000, reward: 25000, name: 'Божественный' },
-{ id: 'comboCosmic', target: 2500, reward: 50000, name: 'Космический' }
-],
-icon: 'fas fa-fire',
-description: 'Достигнуть комбо'
-},
-totalDamage: {
-levels: [
-{ id: 'damage1k', target: 1000, reward: 500, name: '1K урона' },
-{ id: 'damage10k', target: 10000, reward: 2000, name: '10K урона' },
-{ id: 'damage100k', target: 100000, reward: 5000, name: '100K урона' },
-{ id: 'damage1m', target: 1000000, reward: 15000, name: '1M урона' },
-{ id: 'damage10m', target: 10000000, reward: 50000, name: '10M урона' },
-{ id: 'damage100m', target: 100000000, reward: 150000, name: '100M урона' },
-{ id: 'damage1b', target: 1000000000, reward: 500000, name: '1B урона' },
-{ id: 'damageCosmic', target: 10000000000, reward: 1000000, name: 'Космический урон' }
-],
-icon: 'fas fa-bomb',
-description: 'Нанести общего урона'
-},
-playTime: {
-levels: [
-{ id: 'time1min', target: 60, reward: 100, name: '1 минута' },
-{ id: 'time5min', target: 300, reward: 500, name: '5 минут' },
-{ id: 'time15min', target: 900, reward: 1500, name: '15 минут' },
-{ id: 'time30min', target: 1800, reward: 3000, name: '30 минут' },
-{ id: 'time1hour', target: 3600, reward: 7500, name: '1 час' },
-{ id: 'time5hours', target: 18000, reward: 20000, name: '5 часов' },
-{ id: 'time10hours', target: 36000, reward: 50000, name: '10 часов' },
-{ id: 'timeLegend', target: 86400, reward: 100000, name: '24 часа' }
-],
-icon: 'fas fa-clock',
-description: 'Провести времени в игре (сек)'
-},
-rareBlocks: {
-levels: [
-{ id: 'rare1', target: 1, reward: 500, name: 'Первый редкий' },
-{ id: 'rare10', target: 10, reward: 2000, name: '10 редких' },
-{ id: 'rare50', target: 50, reward: 5000, name: '50 редких' },
-{ id: 'rare100', target: 100, reward: 10000, name: '100 редких' },
-{ id: 'rare500', target: 500, reward: 25000, name: '500 редких' },
-{ id: 'rare1000', target: 1000, reward: 50000, name: '1000 редких' }
-],
-icon: 'fas fa-star',
-description: 'Разрушить редких блоков'
-},
-totalClicks: {
-levels: [
-{ id: 'clicks100', target: 100, reward: 100, name: '100 кликов' },
-{ id: 'clicks1k', target: 1000, reward: 500, name: '1K кликов' },
-{ id: 'clicks10k', target: 10000, reward: 2000, name: '10K кликов' },
-{ id: 'clicks100k', target: 100000, reward: 7500, name: '100K кликов' },
-{ id: 'clicks1m', target: 1000000, reward: 25000, name: '1M кликов' },
-{ id: 'clicksLegend', target: 10000000, reward: 100000, name: 'Легенда кликов' }
-],
-icon: 'fas fa-hand-pointer',
-description: 'Совершить кликов'
-},
-accuracy: {
-levels: [
-{ id: 'accuracy10', target: 10, reward: 500, name: '10% точность' },
-{ id: 'accuracy25', target: 25, reward: 1500, name: '25% точность' },
-{ id: 'accuracy50', target: 50, reward: 5000, name: '50% точность' },
-{ id: 'accuracy75', target: 75, reward: 15000, name: '75% точность' },
-{ id: 'accuracy90', target: 90, reward: 50000, name: '90% точность' },
-{ id: 'accuracyPerfect', target: 95, reward: 100000, name: 'Идеальная' }
-],
-icon: 'fas fa-bullseye',
-description: 'Точность критов (%)'
-},
-sessions: {
-levels: [
-{ id: 'sessions10', target: 10, reward: 200, name: '10 сессий' },
-{ id: 'sessions50', target: 50, reward: 1000, name: '50 сессий' },
-{ id: 'sessions100', target: 100, reward: 2500, name: '100 сессий' },
-{ id: 'sessions500', target: 500, reward: 7500, name: '500 сессий' },
-{ id: 'sessions1000', target: 1000, reward: 20000, name: '1000 сессий' },
-{ id: 'sessionsLegend', target: 5000, reward: 50000, name: 'Легенда' }
-],
-icon: 'fas fa-play-circle',
-description: 'Завершить сессий'
-}
+
+// ═══════════════════════════════════════════════
+// 🌍 ГЕНЕРАТОР ЛОКАЦИОННЫХ ДОСТИЖЕНИЙ
+// ═══════════════════════════════════════════════
+const PLANET_INFO = {
+    mercury:  { ic:'fas fa-sun',            em:'☿',  desc:'Исследование Меркурия', n:['Меркурия','кратеров','жаре','аномалий'], final:'☿ Меркурий покорён!' },
+    venus:    { ic:'fas fa-cloud',          em:'♀',  desc:'Исследование Венеры',   n:['Венеры','облаков','тумане','артефактов'], final:'♀ Венера покорена!' },
+    earth:    { ic:'fas fa-globe-americas', em:'🌍', desc:'Защита Земли',          n:['Земли','океанов','атмосфере','реликвий'], final:'🌍 Земля спасена!' },
+    mars:     { ic:'fas fa-mountain',       em:'♂',  desc:'Колонизация Марса',     n:['Марса','каньонов','пустыне','тайн'], final:'♂ Марс колонизирован!' },
+    jupiter:  { ic:'fas fa-wind',           em:'♃',  desc:'Покорение Юпитера',     n:['Юпитера','вихрей','буре','спутников'], final:'♃ Юпитер покорён!' },
+    saturn:   { ic:'fas fa-ring',           em:'♄',  desc:'Исследование Сатурна',  n:['Сатурна','колец','льду','Титана'], final:'♄ Сатурн покорён!' },
+    uranus:   { ic:'fas fa-snowflake',      em:'♅',  desc:'Исследование Урана',    n:['Урана','метели','холоде','кристаллов'], final:'♅ Уран покорён!' },
+    neptune:  { ic:'fas fa-water',          em:'♆',  desc:'Покорение Нептуна',     n:['Нептуна','глубин','урагане','Тритона'], final:'♆ Нептун покорён!' },
+    pluto:    { ic:'fas fa-icicles',        em:'♇',  desc:'Исследование Плутона',  n:['Плутона','мерзлоте','тени','секретов'], final:'♇ Плутон покорён!' }
 };
 
-let achievementsPanelVisible = false;
-let totalAchievements = 0;
-let unlockedAchievements = 0;
+const PLANET_PREFIX = { mercury:'m', venus:'v', earth:'e', mars:'ma', jupiter:'j', saturn:'s', uranus:'u', neptune:'n', pluto:'p' };
+
+const BLOCK_SCALE  = [1, 25, 100, 350, 1000, 3500, 12000, 30000, 80000, 250000, 700000];
+const CRIT_SCALE   = [10, 30, 80, 200, 500, 1200, 3000, 6000];
+const COMBO_SCALE  = [5, 15, 35, 80, 180, 400, 800];
+const RARE_SCALE   = [3, 10, 25, 65, 160, 400];
+
+const BLOCK_NAMES = ['Первые следы','Исследователь','Картограф','Разрушитель','Покоритель','Завоеватель','Титан','Легенда','Мифический','Бессмертный','Всевышний'];
+const CRIT_NAMES  = ['Точный удар','Снайпер','Молниеносный','Безжалостный','Разящий','Легенда крита','Бог крита','Всевышний крити'];
+const COMBO_NAMES = ['Ритм','Вихрь','Шторм','Цунами','Лавина','Апокалипсис','Конец света'];
+const RARE_NAMES  = ['Искатель','Коллекционер','Охотник','Археолог','Расхититель','Бог удачи'];
+
+function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0);
+}
+function jit(seed, pct) {
+    return 1 + ((hashStr(seed) % 1000) / 1000 - 0.5) * 2 * pct;
+}
+
+function planetScale(idx) { return Math.pow(1.62, idx); }
+
+function planetLevels(planet, idx) {
+    const info = PLANET_INFO[planet];
+    const pre  = PLANET_PREFIX[planet];
+    const s    = planetScale(idx);
+    const seed = planet + ':';
+    const L = [];
+
+    L.push({ id: pre + '_first', target: 1, reward: 25 * (idx + 1), name: 'Первое касание ' + info.n[0] });
+
+    BLOCK_SCALE.forEach((t, i) => {
+        const target = Math.max(1, Math.round(t * s * jit(seed + 'b' + i, 0.10)));
+        L.push({ id: pre + '_b' + i, target, reward: Math.round(40 + target * 1.4), metric: 'blocks', name: (i === 0 ? 'Первый камень' : (BLOCK_NAMES[i-1] || BLOCK_NAMES[BLOCK_NAMES.length-1])) + ' ' + info.n[1] });
+    });
+
+    CRIT_SCALE.forEach((t, i) => {
+        const target = Math.max(1, Math.round(t * s * jit(seed + 'c' + i, 0.10)));
+        L.push({ id: pre + '_c' + i, target, reward: Math.round(60 + target * 3), metric: 'crits', name: (CRIT_NAMES[i] || CRIT_NAMES[CRIT_NAMES.length-1]) + ' в ' + info.n[2] });
+    });
+
+    COMBO_SCALE.forEach((t, i) => {
+        const target = Math.max(1, Math.round(t * s * jit(seed + 'co' + i, 0.10)));
+        L.push({ id: pre + '_co' + i, target, reward: Math.round(80 + target * 5), metric: 'combo', name: (COMBO_NAMES[i] || COMBO_NAMES[COMBO_NAMES.length-1]) + ' ' + info.n[0] });
+    });
+
+    RARE_SCALE.forEach((t, i) => {
+        const target = Math.max(1, Math.round(t * s * jit(seed + 'r' + i, 0.10)));
+        L.push({ id: pre + '_r' + i, target, reward: Math.round(150 + target * 80), metric: 'rare', name: (RARE_NAMES[i] || RARE_NAMES[RARE_NAMES.length-1]) + ' ' + info.n[3] });
+    });
+
+    const lastBlocks = L.filter(x => x.metric === 'blocks').pop();
+    L.push({ id: pre + '_done', target: Math.round((lastBlocks ? lastBlocks.target : 1000) * 2.5 * jit(seed + 'done', 0.05)), reward: Math.round((lastBlocks ? lastBlocks.target : 1000) * 0.4), metric: 'blocks', special: true, name: info.final });
+
+    return L;
+}
+
+var planetAchievements = {};
+(window.GAME_CONFIG?.planetOrder || ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune','pluto'])
+    .forEach(function(planet, idx) {
+        planetAchievements[planet] = { planet: planet, icon: PLANET_INFO[planet].ic, emoji: PLANET_INFO[planet].em, description: PLANET_INFO[planet].desc, levels: planetLevels(planet, idx) };
+    });
+
+// ═══════════════════════════════════════════════
+// 🏆 ГЕНЕРАТОР ОБЩИХ ДОСТИЖЕНИЙ
+// ═══════════════════════════════════════════════
+const GLOBAL_DEFS = [
+    { id:'combatMastery',     em:'⚔️', ic:'fas fa-fist-raised',  desc:'Общий урон', targets:[100000, 1000000, 10000000, 100000000, 1000000000, 10000000000], rewards:[1000, 3000, 12000, 40000, 130000, 450000], names:['100K урона','1M урона','10M урона','100M урона','1B урона','Разрушитель миров 💥'] },
+    { id:'resourceCollector', em:'💰', ic:'fas fa-gem',            desc:'Собрано кристаллов', targets:[10000, 100000, 1000000, 10000000, 100000000], rewards:[1000, 5000, 20000, 75000, 300000], names:['10K 💎','100K 💎','1M 💎','10M 💎','Магнат космоса 💎'] },
+    { id:'explorer',          em:'🚀', ic:'fas fa-rocket',         desc:'Посещено планет', targets:[1, 3, 5, 7, 9], rewards:[500, 2000, 5000, 15000, 60000], names:['Первая планета','Внутренние планеты','Пояс астероидов','Внешние планеты','Покоритель СС 🌌'] },
+    { id:'comboLegend',       em:'🔥', ic:'fas fa-fire',           desc:'Максимальное комбо', targets:[50, 100, 250, 500, 1000, 2500], rewards:[1500, 4000, 12000, 35000, 125000, 400000], names:['50x','100x','250x','500x','1000x','Легенда ритма 🔥'] },
+    { id:'critMaster',        em:'🎯', ic:'fas fa-crosshairs',    desc:'Критических ударов', targets:[1000, 5000, 25000, 100000, 500000], rewards:[1000, 6000, 35000, 150000, 600000], names:['1K критов','5K критов','25K критов','100K критов','Мастер точности ⚡'] },
+    { id:'upgradeEnthusiast', em:'🔧', ic:'fas fa-chart-line',    desc:'Куплено улучшений', targets:[10, 30, 100, 250, 600, 1500], rewards:[500, 2500, 10000, 35000, 100000, 350000], names:['10 улучшений','30 улучшений','100 улучшений','250 улучшений','600 улучшений','Архитектор силы 🔧'] },
+    { id:'helperCommander',   em:'🤖', ic:'fas fa-robot',          desc:'Активировано помощников', targets:[5, 25, 100, 500], rewards:[1500, 7000, 30000, 150000], names:['5 помощников','25 помощников','100 помощников','Командир эскадры 🤖'] },
+    { id:'boosterUser',       em:'⚗️', ic:'fas fa-flask',          desc:'Использовано бустов', targets:[1, 5, 15, 30, 60, 120], rewards:[500, 1500, 5000, 12000, 35000, 90000], names:['Первый буст','5 бустов','15 бустов','30 бустов','60 бустов','100 бустов'] },
+    { id:'timeInvestor',      em:'⏱️', ic:'fas fa-clock',          desc:'Время в игре (сек)', targets:[3600, 18000, 36000, 90000, 180000], rewards:[1500, 7000, 20000, 75000, 250000], names:['1 час','5 часов','10 часов','25 часов','Преданный игрок ⏰'] },
+    { id:'rareHunter',        em:'⭐', ic:'fas fa-star',           desc:'Редких блоков', targets:[10, 50, 200, 1000, 5000], rewards:[2000, 8000, 30000, 150000, 600000], names:['10 редких','50 редких','200 редких','1000 редких','Легенда удачи ⭐'] },
+    { id:'clickMaster',       em:'👆', ic:'fas fa-hand-pointer',   desc:'Совершено кликов', targets:[1000, 10000, 100000, 1000000, 10000000], rewards:[500, 3000, 15000, 75000, 250000], names:['1K кликов','10K кликов','100K кликов','1M кликов','Легенда кликов 👆'] }
+];
+
+var globalAchievements = {};
+GLOBAL_DEFS.forEach(function(def) {
+    var levels = def.targets.map(function(t, i) {
+        return {
+            id: def.id + '_l' + i,
+            target: Math.max(1, Math.round(t * jit(def.id + ':g' + i, 0.05))),
+            reward: Math.round((def.rewards[i] || Math.round(t * 0.04)) * jit(def.id + ':r' + i, 0.05)),
+            name: def.names[i] || (def.desc + ' ' + t)
+        };
+    });
+    globalAchievements[def.id] = { icon: def.ic, emoji: def.em, description: def.desc, levels: levels };
+});
+
+var achievements = Object.assign({}, planetAchievements, globalAchievements);
+var achievementsPanelVisible = false;
+var totalAchievements = 0;
+var unlockedAchievements = 0;
+var currentView = 'grid';
+var currentDetailCategory = null;
+var currentTab = 'planets';
+var saveDebounceTimer = null;
+
+var STAGES = {
+    0: { name: 'Заблокировано', cls: 'stage-locked', icon: '🔒' },
+    1: { name: 'Бронза', cls: 'stage-bronze', icon: '🥉' },
+    2: { name: 'Серебро', cls: 'stage-silver', icon: '🥈' },
+    3: { name: 'Золото', cls: 'stage-gold', icon: '🥇' },
+    4: { name: 'Алмаз', cls: 'stage-diamond', icon: '💎' },
+    5: { name: 'Мастер', cls: 'stage-master', icon: '👑' }
+};
+
+function formatNum(n) {
+    if (n >= 1000000000) return (n / 1000000000).toFixed(1) + 'B';
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return String(n);
+}
+
+function calculateStage(catId) {
+    var cat = achievements[catId];
+    var gs = window.gameState;
+    var catState = (gs && gs.achievements) ? gs.achievements[catId] : null;
+    if (!cat || !catState) return { stage: 0, unlocked: 0, total: cat ? cat.levels.length : 0, pct: 0 };
+
+    var unlocked = 0;
+    for (var i = 0; i < cat.levels.length; i++) {
+        var state = catState.levels[cat.levels[i].id];
+        if (state && state.unlocked) unlocked++;
+    }
+
+    var total = cat.levels.length;
+    var pct = total > 0 ? (unlocked / total) * 100 : 0;
+    var stage = 0;
+    if (pct >= 100) stage = 5; else if (pct >= 75) stage = 4; else if (pct >= 50) stage = 3; else if (pct >= 25) stage = 2; else if (pct > 0) stage = 1;
+
+    return { stage: stage, unlocked: unlocked, total: total, pct: pct };
+}
+
+function debouncedSave() {
+    if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(function() {
+        if (typeof window.saveGame === 'function') window.saveGame();
+    }, 10000);
+}
+
+function injectStyles() {
+    if (document.getElementById('achievement-new-styles')) return;
+    var style = document.createElement('style');
+    style.id = 'achievement-new-styles';
+    var css = '';
+    css += '.ach-tabs{display:flex;gap:8px;margin-bottom:12px;border-bottom:2px solid rgba(255,255,255,0.1);padding-bottom:8px}';
+    css += '.ach-tab{flex:1;padding:10px;text-align:center;background:rgba(255,255,255,0.05);border-radius:8px;cursor:pointer;transition:all 0.2s;color:#aaa;font-weight:bold;font-family:Orbitron,sans-serif;font-size:0.9em}';
+    css += '.ach-tab.active{background:linear-gradient(135deg,#4FC3F7,#2196F3);color:#fff;box-shadow:0 2px 8px rgba(33,150,243,0.4)}';
+    css += '.ach-tab:hover:not(.active){background:rgba(255,255,255,0.1)}';
+    css += '.ach-grid-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;padding:10px 0}';
+    css += '.ach-icon-card{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s cubic-bezier(0.175,0.885,0.32,1.275);position:relative;overflow:hidden;padding:6px;min-height:100px}';
+    css += '.ach-icon-card:hover{transform:translateY(-3px) scale(1.05)}';
+    css += '.ach-icon-card:active{transform:scale(0.95)}';
+    css += '.stage-locked{background:linear-gradient(135deg,#2a2a3a,#1a1a2a);border:2px solid #3a3a4a;opacity:0.6}';
+    css += '.stage-bronze{background:linear-gradient(135deg,#cd7f32,#8b4513);border:2px solid #cd7f32;box-shadow:0 2px 8px rgba(205,127,50,0.3)}';
+    css += '.stage-silver{background:linear-gradient(135deg,#e8e8e8,#a8a8a8);border:2px solid #c0c0c0;box-shadow:0 2px 10px rgba(192,192,192,0.4)}';
+    css += '.stage-gold{background:linear-gradient(135deg,#ffd700,#daa520,#ffed4e);background-size:200% 200%;border:2px solid #ffd700;box-shadow:0 0 15px rgba(255,215,0,0.6);animation:goldShine 3s ease infinite}';
+    css += '.stage-diamond{background:linear-gradient(135deg,#b9f2ff,#4fc3f7,#00bcd4,#b9f2ff);background-size:300% 300%;border:2px solid #00ffff;box-shadow:0 0 20px rgba(0,255,255,0.7);animation:diamondShine 4s ease infinite}';
+    css += '.stage-master{background:linear-gradient(135deg,#ff00ff,#8b00ff,#00ffff,#ff00ff);background-size:300% 300%;border:2px solid #fff;box-shadow:0 0 25px rgba(255,0,255,0.8),0 0 40px rgba(139,0,255,0.5);animation:rainbowShift 3s ease infinite}';
+    css += '@keyframes goldShine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}';
+    css += '@keyframes diamondShine{0%,100%{background-position:0% 0%}50%{background-position:100% 100%}}';
+    css += '@keyframes rainbowShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}';
+    css += '.ach-icon-emoji{font-size:2.2em;margin-bottom:4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))}';
+    css += '.stage-locked .ach-icon-emoji{filter:grayscale(100%) brightness(0.5)}';
+    css += '.ach-icon-name{font-size:0.65em;color:#fff;text-align:center;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.8);line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}';
+    css += '.ach-icon-stage{font-size:0.6em;margin-top:2px;padding:1px 6px;border-radius:8px;background:rgba(0,0,0,0.4);color:#fff}';
+    css += '.ach-icon-progress{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(0,0,0,0.3)}';
+    css += '.ach-icon-progress-fill{height:100%;background:linear-gradient(90deg,#4CAF50,#8BC34A);transition:width 0.5s ease}';
+    css += '.ach-master-crown{position:absolute;top:-5px;right:-5px;font-size:1.5em;animation:crownBounce 2s ease infinite;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));z-index:2}';
+    css += '@keyframes crownBounce{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-3px) rotate(10deg)}}';
+    css += '.ach-detail-view{padding:10px 0}';
+    css += '.ach-detail-header{display:flex;align-items:center;gap:15px;padding:15px;background:rgba(255,255,255,0.05);border-radius:12px;margin-bottom:15px}';
+    css += '.ach-detail-icon{font-size:3em;width:80px;height:80px;display:flex;align-items:center;justify-content:center;border-radius:14px}';
+    css += '.ach-detail-info{flex:1}';
+    css += '.ach-detail-title{font-size:1.3em;color:#fff;font-weight:bold;margin-bottom:5px}';
+    css += '.ach-detail-desc{font-size:0.85em;color:#aaa;margin-bottom:8px}';
+    css += '.ach-detail-stats{font-size:0.9em;color:#4FC3F7;font-family:Orbitron,monospace}';
+    css += '.ach-back-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:Orbitron,sans-serif;font-size:0.85em;margin-bottom:10px;transition:all 0.2s}';
+    css += '.ach-back-btn:hover{background:rgba(255,255,255,0.2)}';
+    css += '.ach-levels-path{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0}';
+    css += '.ach-level-node{flex:1;min-width:70px;padding:10px 6px;border-radius:10px;text-align:center;position:relative;transition:all 0.2s}';
+    css += '.ach-level-node.unlocked{background:linear-gradient(135deg,rgba(76,175,80,0.2),rgba(139,195,74,0.2));border:2px solid #4CAF50}';
+    css += '.ach-level-node.current{background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,140,0,0.2));border:2px solid #FFD700;box-shadow:0 0 12px rgba(255,215,0,0.4)}';
+    css += '.ach-level-node.locked{background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.1);opacity:0.5}';
+    css += '.ach-level-node.special{border-color:#FF6B9D!important;box-shadow:0 0 15px rgba(255,107,157,0.5)}';
+    css += '.ach-level-target{font-size:0.9em;font-weight:bold;color:#fff;margin-bottom:3px;font-family:Orbitron,monospace}';
+    css += '.ach-level-name{font-size:0.6em;color:#ccc;line-height:1.1}';
+    css += '.ach-level-reward{font-size:0.6em;color:#FFD700;margin-top:3px}';
+    css += '.ach-level-status{font-size:1.2em;margin-top:4px}';
+    css += '.ach-current-progress{margin-top:15px;padding:12px;background:rgba(79,195,247,0.1);border-radius:10px;border:1px solid rgba(79,195,247,0.3)}';
+    css += '.ach-current-progress-label{font-size:0.8em;color:#4FC3F7;margin-bottom:6px}';
+    css += '.ach-current-progress-bar{height:8px;background:rgba(0,0,0,0.3);border-radius:4px;overflow:hidden}';
+    css += '.ach-current-progress-fill{height:100%;background:linear-gradient(90deg,#4FC3F7,#2196F3);transition:width 0.5s ease}';
+    css += '.ach-current-progress-text{font-size:0.75em;color:#fff;margin-top:4px;font-family:Orbitron,monospace}';
+    css += '@media(max-width:480px){.ach-grid-container{grid-template-columns:repeat(3,1fr);gap:8px}.ach-icon-card{min-height:90px}.ach-icon-emoji{font-size:1.8em}.ach-icon-name{font-size:0.55em}.ach-level-node{min-width:60px;padding:8px 4px}.ach-tab{font-size:0.75em;padding:8px 4px}}';
+    css += '@keyframes achSlideDown{from{top:-100px;opacity:0;transform:translateX(-50%) scale(0.8)}to{top:20%;opacity:1;transform:translateX(-50%) scale(1)}}';
+    css += '@keyframes achSlideUp{from{top:20%;opacity:1;transform:translateX(-50%) scale(1)}to{top:-100px;opacity:0;transform:translateX(-50%) scale(0.8)}}';
+    style.textContent = css;
+    document.head.appendChild(style);
+}
 
 function init() {
-calculateTotalAchievements();
-createAchievementsPanel();
-setupEventHandlers();
-updateAchievementsDisplay();
-checkSavedAchievements();
+    injectStyles();
+    calculateTotalAchievements();
+    createAchievementsPanel();
+    setupEventHandlers();
+    checkSavedAchievements(); // Инициализация и автовосстановление
+    updateAchievementsDisplay();
+    console.log('🏆 Achievements v2.1 initialized. Total:', totalAchievements);
 }
 
 function calculateTotalAchievements() {
-totalAchievements = 0;
-Object.values(achievements).forEach(category => {
-totalAchievements += category.levels.length;
-});
-}
-
-// ✅ ИСПРАВЛЕННАЯ функция createAchievementsPanel
-function createAchievementsPanel() {
-    const panel = document.getElementById('achievementsPanel');
-    if (!panel) return;
-    
-    panel.innerHTML = '';
-    
-    const title = document.createElement('h3');
-    title.textContent = '🏆 Достижения';
-    title.style.marginBottom = '15px';
-    panel.appendChild(title);
-
-const progressContainer = document.createElement('div');
-progressContainer.style.cssText = 'width:100%;background:#333;border-radius:10px;margin-bottom:15px;overflow:hidden;border:2px solid #444;';
-
-const progressBar = document.createElement('div');
-progressBar.id = 'achievementsProgressBar';
-progressBar.style.cssText = 'height:10px;background:linear-gradient(90deg,#4CAF50,#8BC34A);width:0%;border-radius:5px;transition:width 0.5s ease;';
-
-const progressText = document.createElement('div');
-progressText.id = 'achievementsProgressText';
-progressText.style.cssText = 'text-align:center;font-size:0.8em;color:#fff;padding:5px;font-family:Orbitron,sans-serif;';
-
-progressContainer.appendChild(progressBar);
-panel.appendChild(progressContainer);
-panel.appendChild(progressText);
-
-Object.entries(achievements).forEach(([catId, cat]) => {
-const catDiv = document.createElement('div');
-catDiv.className = 'achievement-category';
-catDiv.style.cssText = 'margin-bottom:20px;border-bottom:1px solid #444;padding-bottom:10px;';
-
-const catTitle = document.createElement('div');
-catTitle.style.cssText = 'display:flex;align-items:center;margin-bottom:10px;font-weight:bold;color:#4FC3F7;font-size:1.1em;';
-catTitle.innerHTML = `<i class="${cat.icon}" style="margin-right:8px;"></i>${cat.description}`;
-catDiv.appendChild(catTitle);
-
-cat.levels.forEach((level, idx) => {
-const itemId = `achievement${capitalizeFirstLetter(catId + '_' + level.id)}`;
-const item = document.createElement('div');
-item.className = 'achievement-item';
-item.id = itemId;
-item.style.cssText = 'background:linear-gradient(135deg,rgba(40,40,60,0.8),rgba(30,30,50,0.9));border-radius:8px;padding:10px;margin-bottom:8px;display:flex;align-items:center;border:1px solid #444;position:relative;transition:all 0.3s ease;min-height:60px;';
-item.style.background = [
-'rgba(100,150,255,0.1)','rgba(100,200,255,0.15)','rgba(150,100,255,0.2)',
-'rgba(200,100,255,0.25)','rgba(255,100,150,0.3)','rgba(255,150,100,0.35)','rgba(255,200,100,0.4)'
-][idx % 7];
-
-item.innerHTML = `
-<i class="${cat.icon}" style="font-size:1.5em;margin-right:10px;color:#FFD700;"></i>
-<div style="flex:1;">
-<span class="achievement-name" style="font-weight:bold;display:block;color:#fff;">${level.name}</span>
-<span class="achievement-description" style="font-size:0.75em;opacity:0.8;">${cat.description}: ${level.target}</span>
-<div class="achievement-reward" style="display:flex;align-items:center;font-size:0.8em;margin-top:3px;color:#FFD700;">
-<i class="fas fa-gem" style="margin-right:3px;"></i>${level.reward}
-</div>
-</div>
-<div class="achievement-progress" style="margin-left:auto;color:#4FC3F7;font-size:0.8em;font-weight:bold;font-family:Orbitron,sans-serif;">0%</div>
-`;
-catDiv.appendChild(item);
-});
-panel.appendChild(catDiv);
-});
-}
-
-// ✅ ИСПРАВЛЕННАЯ функция setupEventHandlers
-function setupEventHandlers() {
-    const btn = document.getElementById('achievementsBtn');
-    const panel = document.getElementById('achievementsPanel');
-    if (!btn || !panel) return;
-    
-    // ✅ НЕ клонируем кнопку, просто добавляем обработчики
-    btn.addEventListener('click', toggleAchievementsPanel);
-    btn.addEventListener('touchstart', (e) => { 
-        e.preventDefault(); 
-        toggleAchievementsPanel(); 
-    }, { passive: false });
-
-    document.addEventListener('click', (e) => {
-        if (achievementsPanelVisible && 
-            !panel.contains(e.target) && 
-            !btn.contains(e.target)) {
-            hideAchievementsPanel();
+    totalAchievements = 0;
+    for (var k in achievements) {
+        if (achievements.hasOwnProperty(k)) {
+            totalAchievements += achievements[k].levels.length;
         }
+    }
+}
+
+function createAchievementsPanel() {
+    var panel = document.getElementById('achievementsPanel');
+    if (!panel) return;
+    panel.innerHTML = '';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.1)';
+    header.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0;color:#FFD700;font-family:Orbitron,sans-serif">🏆 Достижения</h3><div style="text-align:right"><div id="achTotalCounter" style="font-size:1em;color:#fff;font-weight:bold">0/' + totalAchievements + '</div><div id="achTotalPct" style="font-size:0.75em;color:#aaa">0%</div></div></div><div style="height:8px;background:#333;border-radius:4px;overflow:hidden"><div id="achTotalBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4CAF50,#8BC34A);border-radius:4px;transition:width 0.5s"></div></div>';
+    panel.appendChild(header);
+
+    var tabs = document.createElement('div');
+    tabs.className = 'ach-tabs';
+    tabs.innerHTML = '<div class="ach-tab active" id="achTabPlanets">🌍 Локации</div><div class="ach-tab" id="achTabGlobal">🏆 Общие</div>';
+    panel.appendChild(tabs);
+
+    var content = document.createElement('div');
+    content.id = 'achContent';
+    panel.appendChild(content);
+
+    document.getElementById('achTabPlanets').addEventListener('click', function() { switchTab('planets'); });
+    document.getElementById('achTabGlobal').addEventListener('click', function() { switchTab('global'); });
+
+    renderGridView();
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    currentView = 'grid';
+    var allTabs = document.querySelectorAll('.ach-tab');
+    for (var i = 0; i < allTabs.length; i++) allTabs[i].classList.remove('active');
+    document.getElementById(tab === 'planets' ? 'achTabPlanets' : 'achTabGlobal').classList.add('active');
+    renderGridView();
+}
+
+function getFilteredCategories() {
+    var result = [];
+    for (var k in achievements) {
+        if (achievements.hasOwnProperty(k)) {
+            var cat = achievements[k];
+            if (currentTab === 'planets') {
+                if (cat.planet !== undefined) result.push({ id: k, cat: cat });
+            } else {
+                if (cat.planet === undefined) result.push({ id: k, cat: cat });
+            }
+        }
+    }
+    return result;
+}
+
+function renderGridView() {
+    currentView = 'grid';
+    var content = document.getElementById('achContent');
+    if (!content) return;
+    content.innerHTML = '';
+    var grid = document.createElement('div');
+    grid.className = 'ach-grid-container';
+    var filtered = getFilteredCategories();
+
+    for (var i = 0; i < filtered.length; i++) {
+        var catId = filtered[i].id;
+        var cat = filtered[i].cat;
+        var info = calculateStage(catId);
+        var stageInfo = STAGES[info.stage];
+
+        var card = document.createElement('div');
+        card.className = 'ach-icon-card ' + stageInfo.cls;
+        card.setAttribute('data-cat-id', catId);
+
+        var crown = info.stage === 5 ? '<div class="ach-master-crown">👑</div>' : '';
+        var emoji = info.stage === 0 ? '🔒' : cat.emoji;
+        card.innerHTML = crown + '<div class="ach-icon-emoji">' + emoji + '</div><div class="ach-icon-name">' + cat.description + '</div><div class="ach-icon-stage">' + stageInfo.icon + ' ' + info.unlocked + '/' + info.total + '</div><div class="ach-icon-progress"><div class="ach-icon-progress-fill" style="width:' + info.pct + '%"></div></div>';
+
+        (function(id) {
+            card.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showCategoryDetail(id);
+            });
+            card.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showCategoryDetail(id);
+            }, { passive: false });
+        })(catId);
+
+        grid.appendChild(card);
+    }
+
+    if (filtered.length === 0) {
+        content.innerHTML = '<div style="text-align:center;padding:30px;color:#888">Нет доступных достижений</div>';
+    } else {
+        content.appendChild(grid);
+    }
+}
+
+function showCategoryDetail(catId) {
+    currentView = 'detail';
+    currentDetailCategory = catId;
+    var content = document.getElementById('achContent');
+    if (!content) return;
+    var cat = achievements[catId];
+    var gs = window.gameState && window.gameState.achievements ? window.gameState.achievements : {};
+    var catState = gs[catId] || { progress: 0, levels: {} };
+    var info = calculateStage(catId);
+    var stageInfo = STAGES[info.stage];
+
+    var currentLevelIdx = cat.levels.length;
+    for (var i = 0; i < cat.levels.length; i++) {
+        var st = catState.levels[cat.levels[i].id];
+        if (!st || !st.unlocked) { currentLevelIdx = i; break; }
+    }
+
+    var emoji = info.stage === 0 ? '🔒' : cat.emoji;
+    content.innerHTML = '<button class="ach-back-btn" id="achBackBtn">← Все достижения</button><div class="ach-detail-view"><div class="ach-detail-header"><div class="ach-detail-icon ' + stageInfo.cls + '"><span class="ach-icon-emoji" style="font-size:1em">' + emoji + '</span></div><div class="ach-detail-info"><div class="ach-detail-title">' + cat.description + '</div><div class="ach-detail-desc">Стадия: ' + stageInfo.icon + ' ' + stageInfo.name + '</div><div class="ach-detail-stats">Прогресс: ' + info.unlocked + '/' + info.total + ' (' + Math.round(info.pct) + '%)</div></div></div><div style="color:#aaa;font-size:0.85em;margin-bottom:10px">Уровни:</div><div class="ach-levels-path" id="achLevelsPath"></div><div class="ach-current-progress"><div class="ach-current-progress-label">📊 Текущий прогресс</div><div class="ach-current-progress-bar"><div class="ach-current-progress-fill" id="achCurrentFill"></div></div><div class="ach-current-progress-text" id="achCurrentText"></div></div></div>';
+
+    var path = document.getElementById('achLevelsPath');
+    for (var i = 0; i < cat.levels.length; i++) {
+        var level = cat.levels[i];
+        var state = catState.levels[level.id];
+        var isUnlocked = state && state.unlocked;
+        var isCurrent = i === currentLevelIdx;
+        var statusClass = isUnlocked ? 'unlocked' : (isCurrent ? 'current' : 'locked');
+        var statusIcon = isUnlocked ? '✅' : (isCurrent ? '🔄' : '🔒');
+        var specialClass = level.special ? ' special' : '';
+
+        var node = document.createElement('div');
+        node.className = 'ach-level-node ' + statusClass + specialClass;
+        node.innerHTML = '<div class="ach-level-target">' + formatNum(level.target) + '</div><div class="ach-level-name">' + level.name + '</div><div class="ach-level-reward">+' + formatNum(level.reward) + ' 💎</div><div class="ach-level-status">' + statusIcon + '</div>';
+        path.appendChild(node);
+    }
+
+    updateCurrentProgressDisplay(catId);
+
+    function backSafe() {
+        currentView = 'grid';
+        renderGridView();
+    }
+    document.getElementById('achBackBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        backSafe();
+    });
+    document.getElementById('achBackBtn').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        backSafe();
+    }, { passive: false });
+}
+
+function updateCurrentProgressDisplay(catId) {
+    var cat = achievements[catId];
+    var gs = window.gameState && window.gameState.achievements ? window.gameState.achievements : {};
+    var catState = gs[catId] || { progress: 0, levels: {} };
+    var currentLevel = null;
+    var prevTarget = 0;
+    for (var i = 0; i < cat.levels.length; i++) {
+        var st = catState.levels[cat.levels[i].id];
+        if (!st || !st.unlocked) { currentLevel = cat.levels[i]; break; }
+        prevTarget = cat.levels[i].target;
+    }
+
+    var fillEl = document.getElementById('achCurrentFill');
+    var textEl = document.getElementById('achCurrentText');
+    if (!fillEl || !textEl) return;
+
+    if (!currentLevel) {
+        fillEl.style.width = '100%';
+        textEl.textContent = '🏆 Все уровни пройдены! Итого: ' + (catState.progress || 0).toLocaleString();
+    } else {
+        var metric = currentLevel.metric;
+        var currentProgress = metric ? (catState['progress_' + metric] || 0) : (catState.progress || 0);
+        var range = currentLevel.target - prevTarget;
+        var progress = currentProgress - prevTarget;
+        var pct = Math.min(100, Math.max(0, (progress / range) * 100));
+        fillEl.style.width = pct + '%';
+        textEl.textContent = currentProgress.toLocaleString() + ' / ' + currentLevel.target.toLocaleString() + ' → ' + currentLevel.name + ' (' + Math.round(pct) + '%)';
+    }
+}
+
+function setupEventHandlers() {
+    var btn = document.getElementById('achievementsBtn');
+    var panel = document.getElementById('achievementsPanel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', toggleAchievementsPanel);
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); toggleAchievementsPanel(); }, { passive: false });
+
+    document.addEventListener('click', function(e) {
+        if (!achievementsPanelVisible) return;
+        var path = (e.composedPath && e.composedPath()) || [e.target];
+        var inside = false;
+        for (var i = 0; i < path.length; i++) {
+            if (path[i] === panel || path[i] === btn) { inside = true; break; }
+        }
+        if (!inside) hideAchievementsPanel();
     });
 }
 
 function toggleAchievementsPanel() {
-const panel = document.getElementById('achievementsPanel');
-if (!panel) return;
-if (achievementsPanelVisible) hideAchievementsPanel();
-else showAchievementsPanel();
+    if (achievementsPanelVisible) hideAchievementsPanel();
+    else showAchievementsPanel();
 }
 
 function showAchievementsPanel() {
-const panel = document.getElementById('achievementsPanel');
-if (!panel) return;
-panel.style.display = 'flex';
-achievementsPanelVisible = true;
-updateAchievementsDisplay();
-if (window.shopSystem && typeof window.shopSystem.closeShop === 'function') {
-window.shopSystem.closeShop();
-}
+    updateTimePlayed();
+    var panel = document.getElementById('achievementsPanel');
+    if (!panel) return;
+    panel.style.display = 'flex';
+    achievementsPanelVisible = true;
+    renderGridView();
+    updateAchievementsDisplay();
+    if (window.shopSystem && window.shopSystem.closeShop) window.shopSystem.closeShop();
+
+    if (window.GAME_CORE && window.GAME_CORE.pauseGame) {
+        window.GAME_CORE.pauseGame();
+    }
 }
 
 function hideAchievementsPanel() {
-const panel = document.getElementById('achievementsPanel');
-if (!panel) return;
-panel.style.display = 'none';
-achievementsPanelVisible = false;
+    var panel = document.getElementById('achievementsPanel');
+    if (!panel) return;
+    panel.style.display = 'none';
+    achievementsPanelVisible = false;
+    currentView = 'grid';
+
+    var shopPanel = document.getElementById('shopPanel');
+    var isShopOpen = shopPanel && shopPanel.style.display === 'flex';
+    if (!isShopOpen && window.GAME_CORE && window.GAME_CORE.resumeGame) {
+        window.GAME_CORE.resumeGame();
+    }
 }
 
-function updateProgress(categoryId, value) {
-if (!window.gameState || !window.gameState.achievements) return;
-const catData = achievements[categoryId];
-if (!catData) return;
-if (!window.gameState.achievements[categoryId]) {
-window.gameState.achievements[categoryId] = { progress: 0, levels: {} };
-}
-window.gameState.achievements[categoryId].progress = value;
+// 🛡️ ИСПРАВЛЕНО: Безопасное обновление метрик — прогресс только растёт!
+function updateProgress(categoryId, value, metric) {
+    var gs = window.gameState;
+    if (!gs || !gs.achievements) return;
+    var catData = achievements[categoryId];
+    if (!catData) return;
+    if (!gs.achievements[categoryId]) {
+        gs.achievements[categoryId] = { progress: 0, levels: {} };
+    }
+    var catState = gs.achievements[categoryId];
 
-catData.levels.forEach(level => {
-const state = window.gameState.achievements[categoryId].levels[level.id];
-if (!state || state.unlocked) return;
-if (value >= level.target) unlockAchievement(categoryId, level.id);
-});
+    // Берем всегда МАКСИМАЛЬНОЕ значение, чтобы никогда не откатываться назад
+    if (value > (catState.progress || 0)) {
+        catState.progress = value;
+    }
+    if (metric) {
+        if (value > (catState['progress_' + metric] || 0)) {
+            catState['progress_' + metric] = value;
+        }
+    }
 
-updateAchievementsDisplay();
-if (typeof window.saveGame === 'function') window.saveGame();
+    for (var i = 0; i < catData.levels.length; i++) {
+        var level = catData.levels[i];
+        var state = catState.levels[level.id];
+        if (!state || state.unlocked) continue;
+
+        if (level.metric && (!metric || level.metric !== metric)) continue;
+
+        if (value >= level.target) unlockAchievement(categoryId, level.id);
+    }
+
+    updateAchievementsDisplay();
+    debouncedSave();
 }
 
 function unlockAchievement(catId, levelId) {
-if (!window.gameState || !window.gameState.achievements) return;
-const catData = achievements[catId];
-const level = catData.levels.find(l => l.id === levelId);
-const state = window.gameState.achievements[catId]?.levels[levelId];
-if (!level || !state || state.unlocked) return;
+    var gs = window.gameState;
+    if (!gs || !gs.achievements) return;
+    var catData = achievements[catId];
+    if (!catData) return;
+    var level = null;
+    for (var i = 0; i < catData.levels.length; i++) {
+        if (catData.levels[i].id === levelId) { level = catData.levels[i]; break; }
+    }
+    if (!level) return;
+    var state = gs.achievements[catId] ? gs.achievements[catId].levels[levelId] : null;
+    if (!state || state.unlocked) return;
 
-state.unlocked = true;
-state.progress = level.target;
-window.gameState.coins += level.reward;
-unlockedAchievements++;
+    state.unlocked = true;
+    state.progress = level.target;
+    gs.coins += level.reward;
+    unlockedAchievements++;
 
-updateAchievementsCounter();
-if (typeof window.updateHUD === 'function') window.updateHUD();
-if (typeof window.updateUpgradeButtons === 'function') window.updateUpgradeButtons();
-showAchievementNotification(catId, levelId);
+    updateAchievementsCounter();
+    showAchievementNotification(catId, levelId);
 
-// ✅ ИСПРАВЛЕНО: Используем GAME_CORE.playSound вместо window.playSound
-if (window.GAME_CORE && typeof window.GAME_CORE.playSound === 'function') {
-window.GAME_CORE.playSound('upgradeSound');
-} else {
-const s = document.getElementById('upgradeSound');
-if (s) { s.currentTime = 0; s.play().catch(() => {}); }
-}
-
-if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-if (typeof window.saveGame === 'function') window.saveGame();
+    if (window.GAME_CORE && window.GAME_CORE.playSound) window.GAME_CORE.playSound('upgradeSound');
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    if (typeof window.saveGame === 'function') window.saveGame();
 }
 
 function showAchievementNotification(catId, levelId) {
-const catData = achievements[catId];
-const level = catData.levels.find(l => l.id === levelId);
-if (!level) return;
-const notif = document.createElement('div');
-notif.style.cssText = 'position:fixed;top:20%;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(255,215,0,0.95),rgba(255,140,0,0.95));color:#000;padding:15px 25px;border-radius:15px;z-index:2000;text-align:center;font-family:Orbitron,sans-serif;font-weight:bold;box-shadow:0 5px 25px rgba(255,215,0,0.5);animation:achSlideDown 0.5s ease-out;max-width:350px;width:90%;border:3px solid #fff;';
+    var catData = achievements[catId];
+    if (!catData) return;
+    var level = null;
+    for (var i = 0; i < catData.levels.length; i++) {
+        if (catData.levels[i].id === levelId) { level = catData.levels[i]; break; }
+    }
+    if (!level) return;
 
-const idx = catData.levels.findIndex(l => l.id === levelId);
-notif.innerHTML = `
-<div style="font-size:2em;margin-bottom:10px;">${'★'.repeat(idx+1)}</div>
-<div style="font-size:1.5em;margin-bottom:5px;">🏆 ДОСТИЖЕНИЕ!</div>
-<div style="font-size:1.2em;margin-bottom:10px;color:#fff;">${level.name}</div>
-<div style="font-size:0.9em;margin-bottom:15px;color:#eee;">${catData.description}: ${level.target}</div>
-<div style="font-size:1.1em;color:#FFD700;"><i class="fas fa-gem" style="margin-right:3px;"></i>Награда: ${level.reward.toLocaleString()}</div>
-<div style="margin-top:15px;font-size:0.8em;color:#ccc;">${unlockedAchievements}/${totalAchievements} (${Math.round((unlockedAchievements/totalAchievements)*100)}%)</div>
-`;
+    var info = calculateStage(catId);
+    var stageInfo = STAGES[info.stage];
+    var stageUpMsg = info.stage > 0 ? '<div style="font-size:1em;color:#fff;margin-top:5px">' + stageInfo.icon + ' Стадия: ' + stageInfo.name + '</div>' : '';
 
-document.body.appendChild(notif);
-setTimeout(() => {
-notif.style.animation = 'achSlideUp 0.5s ease-in forwards';
-setTimeout(() => notif.parentNode?.removeChild(notif), 500);
-}, 3000);
-
-if (!document.getElementById('ach-anim-style')) {
-const style = document.createElement('style');
-style.id = 'ach-anim-style';
-style.textContent = `@keyframes achSlideDown{from{top:-100px;opacity:0;transform:translateX(-50%) scale(0.8);}to{top:20%;opacity:1;transform:translateX(-50%) scale(1);}}@keyframes achSlideUp{from{top:20%;opacity:1;transform:translateX(-50%) scale(1);}to{top:-100px;opacity:0;transform:translateX(-50%) scale(0.8);}}.achievement-item.unlocked{border-color:#FFD700!important;box-shadow:0 0 15px rgba(255,215,0,0.5);background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,140,0,0.15))!important;}`;
-document.head.appendChild(style);
-}
+    var notif = document.createElement('div');
+    notif.style.cssText = 'position:fixed;top:20%;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(255,215,0,0.95),rgba(255,140,0,0.95));color:#000;padding:15px 25px;border-radius:15px;z-index:2000;text-align:center;font-family:Orbitron,sans-serif;font-weight:bold;box-shadow:0 5px 25px rgba(255,215,0,0.5);animation:achSlideDown 0.5s ease-out;max-width:350px;width:90%;border:3px solid #fff';
+    notif.innerHTML = '<div style="font-size:2em;margin-bottom:5px">' + catData.emoji + '</div><div style="font-size:1.4em;margin-bottom:5px">🏆 ДОСТИЖЕНИЕ!</div><div style="font-size:1.1em;margin-bottom:8px;color:#fff">' + level.name + '</div><div style="font-size:0.85em;margin-bottom:10px;color:#eee">' + catData.description + '</div><div style="font-size:1em;color:#FFD700">💎 +' + level.reward.toLocaleString() + '</div>' + stageUpMsg;
+    document.body.appendChild(notif);
+    setTimeout(function() {
+        notif.style.animation = 'achSlideUp 0.5s ease-in forwards';
+        setTimeout(function() { if (notif.parentNode) notif.parentNode.removeChild(notif); }, 500);
+    }, 3000);
 }
 
 function updateAchievementsCounter() {
-const btn = document.getElementById('achievementsBtn');
-if (!btn) return;
-let span = btn.querySelector('#achievementsCount');
-if (!span) {
-span = document.createElement('span');
-span.id = 'achievementsCount';
-span.style.cssText = 'font-size:0.55em;margin-left:3px;position:absolute;bottom:2px;right:8px;font-weight:bold;';
-btn.appendChild(span);
-}
-span.textContent = `${unlockedAchievements}/${totalAchievements}`;
-updateAchievementsProgressBar();
-}
-
-function updateAchievementsProgressBar() {
-const bar = document.getElementById('achievementsProgressBar');
-const txt = document.getElementById('achievementsProgressText');
-if (!bar || !txt) return;
-const pct = totalAchievements > 0 ? (unlockedAchievements / totalAchievements) * 100 : 0;
-bar.style.width = pct + '%';
-txt.textContent = `Разблокировано: ${unlockedAchievements}/${totalAchievements} (${Math.round(pct)}%)`;
+    var btn = document.getElementById('achievementsBtn');
+    if (!btn) return;
+    var span = btn.querySelector('#achievementsCount');
+    if (!span) {
+        span = document.createElement('span');
+        span.id = 'achievementsCount';
+        span.style.cssText = 'font-size:0.55em;margin-left:3px;position:absolute;bottom:2px;right:8px;font-weight:bold';
+        btn.appendChild(span);
+    }
+    span.textContent = unlockedAchievements + '/' + totalAchievements;
 }
 
 function updateAchievementsDisplay() {
-if (!window.gameState) return;
-unlockedAchievements = 0;
-Object.entries(achievements).forEach(([catId, cat]) => {
-const catState = window.gameState.achievements?.[catId];
-if (!catState) return;
+    var gs = window.gameState;
+    if (!gs) return;
+    unlockedAchievements = 0;
+    for (var k in achievements) {
+        if (achievements.hasOwnProperty(k)) {
+            var catState = gs.achievements ? gs.achievements[k] : null;
+            if (!catState) continue;
+            var cat = achievements[k];
+            for (var i = 0; i < cat.levels.length; i++) {
+                var state = catState.levels[cat.levels[i].id];
+                if (state && state.unlocked) unlockedAchievements++;
+            }
+        }
+    }
 
-cat.levels.forEach(level => {
-const state = catState.levels[level.id];
-if (!state) return;
+    var totalCounter = document.getElementById('achTotalCounter');
+    var totalPct = document.getElementById('achTotalPct');
+    var totalBar = document.getElementById('achTotalBar');
+    if (totalCounter) totalCounter.textContent = unlockedAchievements + '/' + totalAchievements;
+    var pct = totalAchievements > 0 ? (unlockedAchievements / totalAchievements) * 100 : 0;
+    if (totalPct) totalPct.textContent = Math.round(pct) + '%';
+    if (totalBar) totalBar.style.width = pct + '%';
 
-const itemId = `achievement${capitalizeFirstLetter(catId + '_' + level.id)}`;
-const item = document.getElementById(itemId);
-if (!item) return;
+    if (currentView === 'grid') {
+        var filtered = getFilteredCategories();
+        for (var i = 0; i < filtered.length; i++) {
+            var catId = filtered[i].id;
+            var card = document.querySelector('.ach-icon-card[data-cat-id="' + catId + '"]');
+            if (!card) continue;
+            var info = calculateStage(catId);
+            var stageInfo = STAGES[info.stage];
+            card.className = 'ach-icon-card ' + stageInfo.cls;
+            var existingCrown = card.querySelector('.ach-master-crown');
+            if (info.stage === 5 && !existingCrown) {
+                var crown = document.createElement('div');
+                crown.className = 'ach-master-crown';
+                crown.textContent = '👑';
+                card.appendChild(crown);
+            } else if (info.stage !== 5 && existingCrown) {
+                existingCrown.remove();
+            }
+            var emojiEl = card.querySelector('.ach-icon-emoji');
+            if (emojiEl) emojiEl.textContent = info.stage === 0 ? '🔒' : achievements[catId].emoji;
+            var stageEl = card.querySelector('.ach-icon-stage');
+            if (stageEl) stageEl.innerHTML = stageInfo.icon + ' ' + info.unlocked + '/' + info.total;
+            var progressFill = card.querySelector('.ach-icon-progress-fill');
+            if (progressFill) progressFill.style.width = info.pct + '%';
+        }
+    } else if (currentView === 'detail' && currentDetailCategory) {
+        showCategoryDetail(currentDetailCategory);
+    }
 
-const progEl = item.querySelector('.achievement-progress');
-if (progEl) {
-if (state.unlocked) {
-progEl.textContent = 'РАЗБЛОКИРОВАНО';
-progEl.style.color = '#4CAF50';
-item.classList.add('unlocked');
-unlockedAchievements++;
-} else {
-const pct = Math.min((catState.progress / level.target) * 100, 100);
-progEl.textContent = `${Math.round(pct)}% (${catState.progress}/${level.target})`;
-progEl.style.color = '#4FC3F7';
-item.classList.remove('unlocked');
+    updateAchievementsCounter();
 }
-}
-});
-});
-updateAchievementsCounter();
-}
 
+// 🛡️ ИСПРАВЛЕНО: Двусторонняя синхронизация метрик
 function checkSavedAchievements() {
-if (!window.gameState.achievements) window.gameState.achievements = {};
-Object.entries(achievements).forEach(([catId, cat]) => {
-if (!window.gameState.achievements[catId]) {
-window.gameState.achievements[catId] = { progress: 0, levels: {} };
-}
-cat.levels.forEach(level => {
-if (!window.gameState.achievements[catId].levels[level.id]) {
-window.gameState.achievements[catId].levels[level.id] = { unlocked: false, progress: 0 };
-}
-});
-});
+    var gs = window.gameState;
+    if (!gs.achievements) gs.achievements = {};
 
-const gm = window.gameMetrics || {};
-if (gm.blocksDestroyed !== undefined) updateProgress('blockBreaker', gm.blocksDestroyed);
-if (gm.totalCoinsEarned !== undefined) updateProgress('crystalCollector', gm.totalCoinsEarned);
-if (gm.totalCrits !== undefined) updateProgress('critSpecialist', gm.totalCrits);
-if (gm.upgradesBought !== undefined) updateProgress('upgrader', gm.upgradesBought);
-if (gm.helpersBought !== undefined) updateProgress('helperExpert', gm.helpersBought);
-if (gm.boostersUsed !== undefined) updateProgress('boosterUser', gm.boostersUsed);
-if (window.gameState.currentLocation) {
-const idx = ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune','pluto'].indexOf(window.gameState.currentLocation) + 1;
-if (idx > 0) updateProgress('planetExplorer', idx);
-}
-if (gm.maxCombo !== undefined) updateProgress('comboMaster', gm.maxCombo);
-if (window.gameState.totalDamageDealt !== undefined) updateProgress('totalDamage', window.gameState.totalDamageDealt);
-if (gm.totalClicks !== undefined) updateProgress('totalClicks', gm.totalClicks);
-if (gm.sessions !== undefined) updateProgress('sessions', gm.sessions);
+    // 1. Инициализация структуры
+    for (var k in achievements) {
+        if (achievements.hasOwnProperty(k)) {
+            var cat = achievements[k];
+            if (!gs.achievements[k]) {
+                gs.achievements[k] = { progress: 0, levels: {} };
+            }
+            for (var i = 0; i < cat.levels.length; i++) {
+                var level = cat.levels[i];
+                if (!gs.achievements[k].levels[level.id]) {
+                    gs.achievements[k].levels[level.id] = { unlocked: false, progress: 0 };
+                }
+            }
+        }
+    }
 
-updateAchievementsDisplay();
-}
+    var gm = window.gameMetrics || {};
+    if (!gm.planetStats) gm.planetStats = {};
 
-function capitalizeFirstLetter(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+    // 2. Универсальная функция двусторонней синхронизации
+    function syncGlobal(catId, metricObj, metricKey) {
+        var catState = gs.achievements[catId];
+        if (!catState) return;
+
+        var metricVal = metricObj[metricKey] || 0;
+        var achVal = catState.progress || 0;
+        // Берём максимальное значение, чтобы восстановить утерянные метрики
+        var maxVal = Math.max(metricVal, achVal);
+
+        if (metricObj[metricKey] !== maxVal) metricObj[metricKey] = maxVal;
+        catState.progress = maxVal;
+
+        var levels = achievements[catId].levels;
+        for (var i = 0; i < levels.length; i++) {
+            if (levels[i].metric) continue;
+            var st = catState.levels[levels[i].id];
+            if (st && !st.unlocked && maxVal >= levels[i].target) {
+                st.unlocked = true;
+                st.progress = levels[i].target;
+            }
+        }
+    }
+
+    syncGlobal('combatMastery', gs, 'totalDamageDealt');
+    syncGlobal('resourceCollector', gm, 'totalCoinsEarned');
+    syncGlobal('comboLegend', gm, 'maxCombo');
+    syncGlobal('critMaster', gm, 'totalCrits');
+    syncGlobal('upgradeEnthusiast', gm, 'upgradesBought');
+    syncGlobal('helperCommander', gm, 'helpersBought');
+    syncGlobal('boosterUser', gm, 'boostersUsed');
+    syncGlobal('rareHunter', gm, 'rareBlocksDestroyed');
+    syncGlobal('clickMaster', gm, 'totalClicks');
+
+    // Explorer (особая проверка по массиву планет)
+    var visited = (gm.visitedPlanets && gm.visitedPlanets.length) || 0;
+    var explorerCat = gs.achievements['explorer'];
+    if (explorerCat) {
+        var maxExplorer = Math.max(visited, explorerCat.progress || 0);
+        explorerCat.progress = maxExplorer;
+        var levels = achievements['explorer'].levels;
+        for (var i = 0; i < levels.length; i++) {
+            var st = explorerCat.levels[levels[i].id];
+            if (st && !st.unlocked && maxExplorer >= levels[i].target) {
+                st.unlocked = true;
+                st.progress = levels[i].target;
+            }
+        }
+    }
+
+    // Синхронизация планет 
+    for (var p in planetAchievements) {
+        if (planetAchievements.hasOwnProperty(p)) {
+            var catState = gs.achievements[p];
+            if (!catState) continue;
+
+            if (!gm.planetStats[p]) gm.planetStats[p] = { blocks: 0, crits: 0, combo: 0, rare: 0 };
+            var stats = gm.planetStats[p];
+
+            // Blocks (Восстанавливаем из прогресса ачивки, если обнулилось)
+            stats.blocks = Math.max(stats.blocks || 0, catState.progress_blocks || catState.progress || 0);
+            catState.progress_blocks = stats.blocks;
+            catState.progress = stats.blocks; 
+
+            // Остальные метрики
+            stats.crits = Math.max(stats.crits || 0, catState.progress_crits || 0);
+            catState.progress_crits = stats.crits;
+
+            stats.combo = Math.max(stats.combo || 0, catState.progress_combo || 0);
+            catState.progress_combo = stats.combo;
+
+            stats.rare = Math.max(stats.rare || 0, catState.progress_rare || 0);
+            catState.progress_rare = stats.rare;
+
+            var planetLevels = achievements[p].levels;
+            for (var j = 0; j < planetLevels.length; j++) {
+                var stPlanet = catState.levels[planetLevels[j].id];
+                if (!stPlanet) continue;
+                var metric = planetLevels[j].metric || 'blocks';
+                var val = stats[metric] || 0;
+                if (!stPlanet.unlocked && val >= planetLevels[j].target) {
+                    stPlanet.unlocked = true;
+                    stPlanet.progress = planetLevels[j].target;
+                }
+            }
+        }
+    }
+}
 
 window.achievementsSystem = {
-init, toggleAchievementsPanel: toggleAchievementsPanel, showAchievementsPanel, hideAchievementsPanel,
-updateProgress, unlockAchievement, updateAchievementsDisplay,
-getUnlockedCount: () => unlockedAchievements, getTotalCount: () => totalAchievements,
-incrementBlocksDestroyed: (c=1) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.blocksDestroyed=(window.gameMetrics.blocksDestroyed||0)+c; updateProgress('blockBreaker',window.gameMetrics.blocksDestroyed); },
-incrementCoinsEarned: (a) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.totalCoinsEarned=(window.gameMetrics.totalCoinsEarned||0)+a; updateProgress('crystalCollector',window.gameMetrics.totalCoinsEarned); },
-incrementCrits: (c=1) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.totalCrits=(window.gameMetrics.totalCrits||0)+c; updateProgress('critSpecialist',window.gameMetrics.totalCrits); },
-incrementUpgrades: (c=1) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.upgradesBought=(window.gameMetrics.upgradesBought||0)+c; updateProgress('upgrader',window.gameMetrics.upgradesBought); },
-incrementHelpers: (c=1) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.helpersBought=(window.gameMetrics.helpersBought||0)+c; updateProgress('helperExpert',window.gameMetrics.helpersBought); },
-incrementBoosters: (c=1) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.boostersUsed=(window.gameMetrics.boostersUsed||0)+c; updateProgress('boosterUser',window.gameMetrics.boostersUsed); },
-updatePlanetProgress: (lvl) => updateProgress('planetExplorer', lvl),
-updateCombo: (combo) => { if(!window.gameMetrics)window.gameMetrics={}; if(combo>(window.gameMetrics.maxCombo||0)){window.gameMetrics.maxCombo=combo;updateProgress('comboMaster',combo);} },
-incrementRareBlocks: (c=1) => { if(!window.gameMetrics)window.gameMetrics={}; window.gameMetrics.rareBlocksDestroyed=(window.gameMetrics.rareBlocksDestroyed||0)+c; updateProgress('rareBlocks',window.gameMetrics.rareBlocksDestroyed); }
+    init: init,
+    toggleAchievementsPanel: toggleAchievementsPanel,
+    showAchievementsPanel: showAchievementsPanel,
+    hideAchievementsPanel: hideAchievementsPanel,
+    updateProgress: updateProgress,
+    unlockAchievement: unlockAchievement,
+    updateAchievementsDisplay: updateAchievementsDisplay,
+    updateTimePlayed: updateTimePlayed, 
+    getUnlockedCount: function() { return unlockedAchievements; },
+    getTotalCount: function() { return totalAchievements; },
+
+    incrementPlanetBlocks: function(planet, c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        if (!gm.planetStats) gm.planetStats = {};
+        if (!gm.planetStats[planet]) gm.planetStats[planet] = { blocks: 0, crits: 0, combo: 0, rare: 0 };
+        gm.planetStats[planet].blocks = (gm.planetStats[planet].blocks || 0) + c;
+        updateProgress(planet, gm.planetStats[planet].blocks, 'blocks');
+    },
+    incrementPlanetCrits: function(planet, c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm || !gm.planetStats) return;
+        if (!gm.planetStats[planet]) gm.planetStats[planet] = { blocks: 0, crits: 0, combo: 0, rare: 0 };
+        gm.planetStats[planet].crits = (gm.planetStats[planet].crits || 0) + c;
+        updateProgress(planet, gm.planetStats[planet].crits, 'crits');
+    },
+    updatePlanetCombo: function(planet, combo) {
+        var gm = window.gameMetrics;
+        if (!gm || !gm.planetStats) return;
+        if (!gm.planetStats[planet]) gm.planetStats[planet] = { blocks: 0, crits: 0, combo: 0, rare: 0 };
+        if (combo > (gm.planetStats[planet].combo || 0)) {
+            gm.planetStats[planet].combo = combo;
+            updateProgress(planet, combo, 'combo');
+        }
+    },
+    incrementPlanetRareBlocks: function(planet, c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm || !gm.planetStats) return;
+        if (!gm.planetStats[planet]) gm.planetStats[planet] = { blocks: 0, crits: 0, combo: 0, rare: 0 };
+        gm.planetStats[planet].rare = (gm.planetStats[planet].rare || 0) + c;
+        updateProgress(planet, gm.planetStats[planet].rare, 'rare');
+    },
+
+    incrementTotalDamage: function(d) {
+        var gs = window.gameState;
+        if (!gs) gs = window.gameState = {};
+        gs.totalDamageDealt = (gs.totalDamageDealt || 0) + d;
+        updateProgress('combatMastery', gs.totalDamageDealt);
+    },
+    incrementCoinsEarned: function(a) {
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.totalCoinsEarned = (gm.totalCoinsEarned || 0) + a;
+        updateProgress('resourceCollector', gm.totalCoinsEarned);
+    },
+    updatePlanetProgress: function(planet) {
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        if (!gm.visitedPlanets) gm.visitedPlanets = [];
+
+        if (gm.visitedPlanets.indexOf(planet) === -1) {
+            gm.visitedPlanets.push(planet);
+            gm.planetsVisited = gm.visitedPlanets.length;
+            updateProgress('explorer', gm.planetsVisited);
+        }
+    },
+    updateCombo: function(combo) {
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        if (combo > (gm.maxCombo || 0)) {
+            gm.maxCombo = combo;
+            updateProgress('comboLegend', combo);
+        }
+    },
+    incrementCrits: function(c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.totalCrits = (gm.totalCrits || 0) + c;
+        updateProgress('critMaster', gm.totalCrits);
+    },
+    incrementUpgrades: function(c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.upgradesBought = (gm.upgradesBought || 0) + c;
+        updateProgress('upgradeEnthusiast', gm.upgradesBought);
+    },
+    incrementHelpers: function(c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.helpersBought = (gm.helpersBought || 0) + c;
+        updateProgress('helperCommander', gm.helpersBought);
+    },
+    incrementBoosters: function(c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.boostersUsed = (gm.boostersUsed || 0) + c;
+        updateProgress('boosterUser', gm.boostersUsed);
+    },
+    incrementRareBlocks: function(c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.rareBlocksDestroyed = (gm.rareBlocksDestroyed || 0) + c;
+        updateProgress('rareHunter', gm.rareBlocksDestroyed);
+    },
+    incrementTotalClicks: function(c) {
+        if (!c) c = 1;
+        var gm = window.gameMetrics;
+        if (!gm) gm = window.gameMetrics = {};
+        gm.totalClicks = (gm.totalClicks || 0) + c;
+        updateProgress('clickMaster', gm.totalClicks);
+    }
 };
 
-// ✅ ИСПРАВЛЕННАЯ функция safeInit
+// 🛡️ ИСПРАВЛЕНО: Безопасное обновление времени игры
+function updateTimePlayed() {
+    if (!window.gameMetrics) return;
+    const gm = window.gameMetrics;
+    const sessionTime = Math.floor((Date.now() - (gm.startTime || Date.now())) / 1000);
+    let totalTime = (gm.totalTimePlayed || 0) + sessionTime;
+    
+    // Синхронизация: если ачивка ушла вперёд метрики (баг сброса), догоняем метрику
+    if (window.gameState?.achievements?.timeInvestor) {
+        var catState = window.gameState.achievements.timeInvestor;
+        
+        if ((catState.progress || 0) > totalTime) {
+            gm.totalTimePlayed = catState.progress - sessionTime; // Выравниваем
+            totalTime = catState.progress;
+        } else {
+            catState.progress = totalTime;
+        }
+        
+        var levels = achievements.timeInvestor.levels;
+        for (var i = 0; i < levels.length; i++) {
+            var st = catState.levels[levels[i].id];
+            if (st && !st.unlocked && totalTime >= levels[i].target) {
+                st.unlocked = true;
+                st.progress = levels[i].target;
+            }
+        }
+    }
+}
+
 function safeInit() {
-    if (!document.getElementById('achievementsBtn')) { 
-        setTimeout(safeInit, 200); 
-        return; 
+    if (!document.getElementById('achievementsBtn')) {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(safeInit, 100));
+        return;
     }
-    if (!window.gameState) { 
-        setTimeout(safeInit, 200); 
-        return; 
-    }
-    // ✅ Добавлена проверка GAME_CORE
-    if (!window.GAME_CORE) { 
-        setTimeout(safeInit, 200); 
-        return; 
+    if (!window.gameState || !window.GAME_CORE) {
+        setTimeout(safeInit, 200);
+        return;
     }
     init();
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(safeInit, 300));
-else setTimeout(safeInit, 300);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(safeInit, 100));
+} else {
+    setTimeout(safeInit, 100);
+} 
 })();
