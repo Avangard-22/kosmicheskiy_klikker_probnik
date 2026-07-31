@@ -1,0 +1,9 @@
+export const GAME_CONSTANTS = {
+  AU_TO_DAMAGE: 149597870.691,
+  TICK_RATE: 1000,
+  SAVE_INTERVAL: 30000,
+  COMBO_WINDOW: 1000,
+  COMBO_DECAY_RATE: 500,
+  MAX_COMBO: 100,
+  CLOUD_API_URL: 'https://d5de5jfdv68j295hgj7a.y3q8o1jq.apigw.yandexcloud.net',
+};
